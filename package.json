@@ -1,0 +1,17 @@
+{
+    "name": "firebot-mpris",
+    "version": "0.1",
+    "description": "Firebot MPRIS integration for information about currently playing media",
+    "author": "Jakob Ketterl",
+    "license": "GPLv3",
+    "scripts": {
+        "build": "webpack"
+    },
+    "devDependencies": {
+        "@crowbartools/firebot-custom-scripts-types": "^5.65.1",
+        "terser-webpack-plugin": "^5.3.16",
+        "ts-loader": "^9.5.4",
+        "webpack": "^5.104.1",
+        "webpack-cli": "^6.0.1"
+    }
+}
