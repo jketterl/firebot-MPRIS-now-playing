@@ -13,5 +13,10 @@
         "ts-loader": "^9.5.4",
         "webpack": "^5.104.1",
         "webpack-cli": "^6.0.1"
+    },
+    "dependencies": {
+        "@dbus-types/dbus": "^0.0.4",
+        "@dbus-types/notifications": "^0.0.5",
+        "dbus-ts": "^0.0.7"
     }
 }
