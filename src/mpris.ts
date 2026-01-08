@@ -6,6 +6,12 @@ import {
 import { Interfaces as DBus } from "@dbus-types/dbus";
 import { EventEmitter } from "node:events";
 
+export type Metadata = {
+    artist?: string;
+    title?: string;
+    album?: string;
+};
+
 export default class Player extends EventEmitter {
     constructor(name: string) {
         super();
@@ -32,8 +38,14 @@ export default class Player extends EventEmitter {
             });
         });
     }
-    parseMetaData(meta: [{ [key: string]: any }]) {
-        this.emit("MetadataChanged", meta);
+    parseMetaData(meta: { [key: string]: any }) {
+        const parsed: Metadata = {
+            artist: meta["xesam:artist"] || undefined,
+            title: meta["xesam:title"] || undefined,
+            album: meta["xesam:album"] || undefined,
+        };
+        console.info(parsed);
+        this.emit("MetadataChanged", parsed);
     }
     parsePlaybackStatus(status: Playback_Status) {
         this.emit("PlaybackStatusChanged", status);

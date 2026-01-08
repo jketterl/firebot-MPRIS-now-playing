@@ -5,7 +5,7 @@ let connector: MediaConnector | null = null;
 
 const script: Firebot.CustomScript = {
     run: (runRequest) => {
-        connector = new MediaConnector();
+        connector = new MediaConnector(runRequest.modules);
     },
     getDefaultParameters: () => {
         return {};
