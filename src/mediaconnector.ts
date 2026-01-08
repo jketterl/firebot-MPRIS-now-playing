@@ -43,16 +43,38 @@ export default class MediaConnector {
                 },
                 evaluator(trigger: Trigger, ...args): any {
                     const meta = trigger.metadata.eventData as Metadata | null;
-                    return meta[name as keyof Metadata] || "";
+                    return (meta && meta[name as keyof Metadata]) || "";
                 },
             };
         }
     );
+    private combinedVariable: ReplaceVariable = {
+        definition: {
+            handle: "mprisCombined",
+            description:
+                "Current track information from media player (combined)",
+            triggers: {
+                event: ["de.justjakob.mpris:metadata-changed"],
+                manual: true,
+            },
+            possibleDataOutput: ["text"],
+        },
+        evaluator(trigger: Trigger, ...args): any {
+            const meta = trigger.metadata.eventData as Metadata | null;
+            if (!meta) return "";
+            return (
+                (meta.artist ? meta.artist + " - " : "") + (meta.title ?? "")
+            );
+        },
+    };
     constructor(modules: ScriptModules) {
         const player = new Player("AudioTube");
         modules.eventManager.registerEventSource(this.eventSource);
         this.metaVariables.forEach((v) =>
             modules.replaceVariableManager.registerReplaceVariable(v)
+        );
+        modules.replaceVariableManager.registerReplaceVariable(
+            this.combinedVariable
         );
         player.on("MetadataChanged", (meta) => {
             modules.eventManager.triggerEvent(
