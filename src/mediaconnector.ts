@@ -3,6 +3,7 @@ import { EventSource } from "@crowbartools/firebot-custom-scripts-types/types/mo
 import Player, { Metadata } from "./mpris";
 import { ReplaceVariable } from "@crowbartools/firebot-custom-scripts-types/types/modules/replace-variable-manager";
 import { Trigger } from "@crowbartools/firebot-custom-scripts-types/types/triggers";
+import { Playback_Status } from "./@dbus-types/mpris/mpris";
 
 export default class MediaConnector {
     private eventSource: EventSource = {
@@ -67,6 +68,23 @@ export default class MediaConnector {
             );
         },
     };
+    private statusVariable: ReplaceVariable = {
+        definition: {
+            handle: "mprisStatus",
+            description: "Current playback status",
+            triggers: {
+                event: ["de.justjakob.mpris:playback-status-changed"],
+                manual: true,
+            },
+            possibleDataOutput: ["text"],
+        },
+        evaluator(trigger: Trigger, ...args): any {
+            const status = trigger.metadata.eventData
+                .status as Playback_Status | null;
+            console.info(status);
+            return status;
+        },
+    };
     constructor(modules: ScriptModules) {
         const player = new Player("AudioTube");
         modules.eventManager.registerEventSource(this.eventSource);
@@ -76,11 +94,21 @@ export default class MediaConnector {
         modules.replaceVariableManager.registerReplaceVariable(
             this.combinedVariable
         );
+        modules.replaceVariableManager.registerReplaceVariable(
+            this.statusVariable
+        );
         player.on("MetadataChanged", (meta) => {
             modules.eventManager.triggerEvent(
                 "de.justjakob.mpris",
                 "metadata-changed",
                 meta
+            );
+        });
+        player.on("PlaybackStatusChanged", (status) => {
+            modules.eventManager.triggerEvent(
+                "de.justjakob.mpris",
+                "playback-status-changed",
+                { status }
             );
         });
     }
