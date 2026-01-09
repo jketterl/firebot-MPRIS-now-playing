@@ -11,6 +11,7 @@ export type Metadata = {
     artist?: string;
     title?: string;
     album?: string;
+    artUrl?: string;
 };
 
 export default class Player extends EventEmitter {
@@ -46,6 +47,7 @@ export default class Player extends EventEmitter {
             artist: meta["xesam:artist"] || undefined,
             title: meta["xesam:title"] || undefined,
             album: meta["xesam:album"] || undefined,
+            artUrl: meta["mpris:artUrl"] || undefined,
         };
         const delta = diff(this.current, parsed);
         if (!Object.keys(delta).length) return;

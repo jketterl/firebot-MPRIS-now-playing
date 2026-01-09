@@ -66,7 +66,7 @@ export const MprisOverlay: Effects.EffectType<any, MprisOverlayData> = {
                 if (!$root.length) {
                     $root = $(`
                         <div class="mpris-root">
-                            <img id="cover" />
+                            <img id="artUrl" />
                             <div class="text">
                                 <span id="title"></span>
                                 <span id="artist"></span>
@@ -86,6 +86,7 @@ export const MprisOverlay: Effects.EffectType<any, MprisOverlayData> = {
                     .addClass(`status-${data.status}`);
                 $root.find("#title").text(data.metadata.title ?? "");
                 $root.find("#artist").text(data.metadata.artist ?? "");
+                $root.find("#artUrl").attr("src", data.metadata.artUrl ?? "");
             },
         },
     },
