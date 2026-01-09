@@ -67,4 +67,10 @@ export default class Player extends EventEmitter {
             }
         });
     }
+    getMetadata(): Metadata {
+        return this.current;
+    }
+    getPlaybackStatus(): Playback_Status {
+        return this.status;
+    }
 }

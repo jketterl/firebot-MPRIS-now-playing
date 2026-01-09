@@ -4,9 +4,11 @@ import Player, { Metadata } from "./mpris";
 import { ReplaceVariable } from "@crowbartools/firebot-custom-scripts-types/types/modules/replace-variable-manager";
 import { Trigger } from "@crowbartools/firebot-custom-scripts-types/types/triggers";
 import { Playback_Status } from "./@dbus-types/mpris/mpris";
+import { MprisOverlay } from "./overlay";
 
 export default class MediaConnector {
     private modules: ScriptModules;
+    private player: Player;
     private eventSource: EventSource = {
         id: "de.justjakob.mpris",
         name: "Firebot MPRIS now playing",
@@ -82,7 +84,6 @@ export default class MediaConnector {
         evaluator(trigger: Trigger, ...args): any {
             const status = trigger.metadata.eventData
                 .status as Playback_Status | null;
-            console.info(status);
             return status;
         },
     };
@@ -90,7 +91,7 @@ export default class MediaConnector {
         this.modules = modules;
 
         // initialize player connection
-        const player = new Player("AudioTube");
+        this.player = new Player("AudioTube");
 
         // register components with firebot
         this.modules.eventManager.registerEventSource(this.eventSource);
@@ -103,21 +104,24 @@ export default class MediaConnector {
         this.modules.replaceVariableManager.registerReplaceVariable(
             this.statusVariable
         );
+        this.modules.effectManager.registerEffect(MprisOverlay);
 
         // set up interactions
-        player.on("MetadataChanged", (meta) => {
+        this.player.on("MetadataChanged", (meta) => {
             modules.eventManager.triggerEvent(
                 "de.justjakob.mpris",
                 "metadata-changed",
                 meta
             );
+            this.sendState();
         });
-        player.on("PlaybackStatusChanged", (status) => {
+        this.player.on("PlaybackStatusChanged", (status) => {
             modules.eventManager.triggerEvent(
                 "de.justjakob.mpris",
                 "playback-status-changed",
                 { status }
             );
+            this.sendState();
         });
     }
     stop() {
@@ -133,5 +137,12 @@ export default class MediaConnector {
         this.modules.replaceVariableManager.unregisterReplaceVariable(
             this.statusVariable.definition.handle
         );
+        this.modules.effectManager.unregisterEffect(MprisOverlay.definition.id);
+    }
+    sendState() {
+        this.modules.httpServer.sendToOverlay("de.justjakob.mpris.overlay", {
+            metadata: this.player.getMetadata(),
+            status: this.player.getPlaybackStatus(),
+        });
     }
 }
