@@ -9,6 +9,7 @@
     },
     "devDependencies": {
         "@crowbartools/firebot-custom-scripts-types": "^5.65.1",
+        "@types/jquery": "^3.5.33",
         "terser-webpack-plugin": "^5.3.16",
         "ts-loader": "^9.5.4",
         "webpack": "^5.104.1",
