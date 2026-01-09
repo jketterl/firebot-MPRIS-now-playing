@@ -5,6 +5,7 @@ import {
 } from "./@dbus-types/mpris/mpris";
 import { Interfaces as DBus } from "@dbus-types/dbus";
 import { EventEmitter } from "node:events";
+import { diff } from "deep-object-diff";
 
 export type Metadata = {
     artist?: string;
@@ -13,6 +14,8 @@ export type Metadata = {
 };
 
 export default class Player extends EventEmitter {
+    private current: Metadata = {};
+    private status: Playback_Status = "Stopped";
     constructor(name: string) {
         super();
         const service = `org.mpris.MediaPlayer2.${name}`;
@@ -44,11 +47,15 @@ export default class Player extends EventEmitter {
             title: meta["xesam:title"] || undefined,
             album: meta["xesam:album"] || undefined,
         };
-        console.info(parsed);
-        this.emit("MetadataChanged", parsed);
+        const delta = diff(this.current, parsed);
+        if (!Object.keys(delta).length) return;
+        this.current = parsed;
+        this.emit("MetadataChanged", structuredClone(parsed));
     }
     parsePlaybackStatus(status: Playback_Status) {
-        this.emit("PlaybackStatusChanged", status);
+        if (status == this.status) return;
+        this.status = status;
+        this.emit("PlaybackStatusChanged", structuredClone(status));
     }
     receiveNotification(id: string, changed: { [key: string]: any }) {
         Object.entries(changed).forEach(([key, value]) => {
