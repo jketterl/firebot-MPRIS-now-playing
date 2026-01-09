@@ -6,6 +6,7 @@ import { Trigger } from "@crowbartools/firebot-custom-scripts-types/types/trigge
 import { Playback_Status } from "./@dbus-types/mpris/mpris";
 
 export default class MediaConnector {
+    private modules: ScriptModules;
     private eventSource: EventSource = {
         id: "de.justjakob.mpris",
         name: "Firebot MPRIS now playing",
@@ -86,17 +87,24 @@ export default class MediaConnector {
         },
     };
     constructor(modules: ScriptModules) {
+        this.modules = modules;
+
+        // initialize player connection
         const player = new Player("AudioTube");
-        modules.eventManager.registerEventSource(this.eventSource);
+
+        // register components with firebot
+        this.modules.eventManager.registerEventSource(this.eventSource);
         this.metaVariables.forEach((v) =>
-            modules.replaceVariableManager.registerReplaceVariable(v)
+            this.modules.replaceVariableManager.registerReplaceVariable(v)
         );
-        modules.replaceVariableManager.registerReplaceVariable(
+        this.modules.replaceVariableManager.registerReplaceVariable(
             this.combinedVariable
         );
-        modules.replaceVariableManager.registerReplaceVariable(
+        this.modules.replaceVariableManager.registerReplaceVariable(
             this.statusVariable
         );
+
+        // set up interactions
         player.on("MetadataChanged", (meta) => {
             modules.eventManager.triggerEvent(
                 "de.justjakob.mpris",
@@ -112,5 +120,18 @@ export default class MediaConnector {
             );
         });
     }
-    stop() {}
+    stop() {
+        this.modules.eventManager.unregisterEventSource(this.eventSource.id);
+        this.metaVariables.forEach((v) =>
+            this.modules.replaceVariableManager.unregisterReplaceVariable(
+                v.definition.handle
+            )
+        );
+        this.modules.replaceVariableManager.unregisterReplaceVariable(
+            this.combinedVariable.definition.handle
+        );
+        this.modules.replaceVariableManager.unregisterReplaceVariable(
+            this.statusVariable.definition.handle
+        );
+    }
 }
