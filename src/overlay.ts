@@ -1,6 +1,11 @@
-import { Effects } from "@crowbartools/firebot-custom-scripts-types/types/effects";
 import { Metadata } from "./mpris";
 import { Playback_Status } from "./@dbus-types/mpris/mpris";
+import {
+    OverlayWidgetType,
+    WidgetOverlayEvent,
+} from "@crowbartools/firebot-custom-scripts-types/types/overlay-widgets";
+
+export type MprisOverlaySettings = {};
 
 export type MprisOverlayData = {
     metadata: Metadata;
@@ -41,53 +46,37 @@ const styles = `
     }    
 `;
 
-export const MprisOverlay: Effects.EffectType<any, MprisOverlayData> = {
-    definition: {
-        id: "de.justjakob.mpris::MprisOverlay",
-        name: "MPRIS overlay",
-        description: "MPRIS now playing overlay",
-        icon: "",
-        categories: [],
-        dependencies: [],
-    },
-    optionsTemplate: "",
-    onTriggerEvent: async (event) => {
-        return true;
-    },
+export const MprisOverlay: OverlayWidgetType<
+    MprisOverlaySettings,
+    MprisOverlayData
+> = {
+    id: "de.justjakob.mpris:overlay",
+    name: "MPRIS overlay",
+    description: "MPRIS now playing overlay",
+    icon: "",
     overlayExtension: {
         dependencies: {
             globalStyles: styles,
         },
-        event: {
-            name: "de.justjakob.mpris.overlay",
-            onOverlayEvent: (data: MprisOverlayData) => {
-                const $wrapper = $("#wrapper");
-                let $root = $wrapper.find(".mpris-root");
-                if (!$root.length) {
-                    $root = $(`
-                        <div class="mpris-root">
-                            <img id="artUrl" />
-                            <div class="text">
-                                <span id="title"></span>
-                                <span id="artist"></span>
-                            </div>
+        eventHandler: (
+            event: WidgetOverlayEvent<MprisOverlaySettings, MprisOverlayData>,
+            utils,
+        ) => {
+            const generateWidgetHtml = (
+                config: (typeof event)["data"]["widgetConfig"],
+            ) => {
+                return `
+                    <div class="mpris-root status-${(config.state && config.state.status) || "stopped"}">
+                        <img id="artUrl" src="${(config.state && config.state.metadata.artUrl) || ""}" />
+                        <div class="text">
+                            <span id="title">${config.state && config.state.metadata.title}</span>
+                            <span id="artist">${config.state && config.state.metadata.artist}</span>
                         </div>
-                        `);
-                    $wrapper.append($root);
-                }
+                    </div>
+                `;
+            };
 
-                $root
-                    .removeClass((index: number, className: string): string => {
-                        return className
-                            .split(" ")
-                            .filter((c) => c.startsWith("status-"))
-                            .join(" ");
-                    })
-                    .addClass(`status-${data.status}`);
-                $root.find("#title").text(data.metadata.title ?? "");
-                $root.find("#artist").text(data.metadata.artist ?? "");
-                $root.find("#artUrl").attr("src", data.metadata.artUrl ?? "");
-            },
+            utils.handleOverlayEvent(generateWidgetHtml);
         },
     },
 };

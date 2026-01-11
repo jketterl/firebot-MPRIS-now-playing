@@ -50,7 +50,7 @@ export default class MediaConnector {
                     return (meta && meta[name as keyof Metadata]) || "";
                 },
             };
-        }
+        },
     );
     private combinedVariable: ReplaceVariable = {
         definition: {
@@ -91,27 +91,29 @@ export default class MediaConnector {
         this.modules = modules;
 
         // initialize player connection
-        this.player = new Player("AudioTube");
+        this.player = new Player("amarok");
 
         // register components with firebot
         this.modules.eventManager.registerEventSource(this.eventSource);
         this.metaVariables.forEach((v) =>
-            this.modules.replaceVariableManager.registerReplaceVariable(v)
+            this.modules.replaceVariableManager.registerReplaceVariable(v),
         );
         this.modules.replaceVariableManager.registerReplaceVariable(
-            this.combinedVariable
+            this.combinedVariable,
         );
         this.modules.replaceVariableManager.registerReplaceVariable(
-            this.statusVariable
+            this.statusVariable,
         );
-        this.modules.effectManager.registerEffect(MprisOverlay);
+        this.modules.overlayWidgetsManager.registerOverlayWidgetType(
+            MprisOverlay,
+        );
 
         // set up interactions
         this.player.on("MetadataChanged", (meta) => {
             modules.eventManager.triggerEvent(
                 "de.justjakob.mpris",
                 "metadata-changed",
-                meta
+                meta,
             );
             this.sendState();
         });
@@ -119,7 +121,7 @@ export default class MediaConnector {
             modules.eventManager.triggerEvent(
                 "de.justjakob.mpris",
                 "playback-status-changed",
-                { status }
+                { status },
             );
             this.sendState();
         });
@@ -128,21 +130,28 @@ export default class MediaConnector {
         this.modules.eventManager.unregisterEventSource(this.eventSource.id);
         this.metaVariables.forEach((v) =>
             this.modules.replaceVariableManager.unregisterReplaceVariable(
-                v.definition.handle
-            )
+                v.definition.handle,
+            ),
         );
         this.modules.replaceVariableManager.unregisterReplaceVariable(
-            this.combinedVariable.definition.handle
+            this.combinedVariable.definition.handle,
         );
         this.modules.replaceVariableManager.unregisterReplaceVariable(
-            this.statusVariable.definition.handle
+            this.statusVariable.definition.handle,
         );
-        this.modules.effectManager.unregisterEffect(MprisOverlay.definition.id);
+        // missing: unregister overlay widget
     }
     sendState() {
-        this.modules.httpServer.sendToOverlay("de.justjakob.mpris.overlay", {
-            metadata: this.player.getMetadata(),
-            status: this.player.getPlaybackStatus(),
-        });
+        this.modules.overlayWidgetConfigManager
+            .getConfigsOfType("de.justjakob.mpris:overlay")
+            .forEach((c) => {
+                this.modules.overlayWidgetConfigManager.setWidgetStateById(
+                    c.id,
+                    {
+                        metadata: this.player.getMetadata(),
+                        status: this.player.getPlaybackStatus(),
+                    },
+                );
+            });
     }
 }
