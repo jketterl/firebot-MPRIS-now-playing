@@ -15,6 +15,7 @@ export type MprisOverlayData = {
 const styles = `
     .mpris-root {
         display: none;
+        min-height: 80px;
     }
 
     .mpris-root.status-Playing {
@@ -67,7 +68,6 @@ export const MprisOverlay: OverlayWidgetType<
             ) => {
                 return `
                     <div class="mpris-root status-${(config.state && config.state.status) || "stopped"}">
-                        <img id="artUrl" src="${(config.state && config.state.metadata.artUrl) || ""}" />
                         <div class="text">
                             <span id="title">${config.state && config.state.metadata.title}</span>
                             <span id="artist">${config.state && config.state.metadata.artist}</span>
